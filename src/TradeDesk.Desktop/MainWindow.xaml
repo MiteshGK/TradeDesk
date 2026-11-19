@@ -1,0 +1,220 @@
+<Window x:Class="TradeDesk.Desktop.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="clr-namespace:TradeDesk.Desktop.ViewModels"
+        mc:Ignorable="d"
+        d:DataContext="{d:DesignInstance Type=vm:MainViewModel}"
+        Title="TradeDesk — Money Market Blotter"
+        Width="1280" Height="760" MinWidth="1000" MinHeight="600"
+        Background="{StaticResource Canvas}" FontFamily="Segoe UI" FontSize="13"
+        WindowStartupLocation="CenterScreen">
+
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <DockPanel Margin="0,0,0,12">
+            <Button DockPanel.Dock="Right" Content="⟳  Refresh" Command="{Binding RefreshCommand}" Margin="0" VerticalAlignment="Center"/>
+            <StackPanel>
+                <TextBlock Text="TradeDesk" FontSize="22" FontWeight="Bold" Foreground="{StaticResource Ink}"/>
+                <TextBlock Text="Money-market deal booking and settlement · WPF + MVVM client for an ASP.NET Core Web API"
+                           Foreground="{StaticResource Muted}"/>
+            </StackPanel>
+        </DockPanel>
+
+        <!-- Position summary -->
+        <UniformGrid Grid.Row="1" Rows="1" Margin="0,0,0,12">
+            <Border Style="{StaticResource Card}" Margin="0,0,8,0">
+                <StackPanel>
+                    <TextBlock Style="{StaticResource Caption}" Text="OPEN TRADES"/>
+                    <TextBlock Style="{StaticResource Figure}" Text="{Binding Summary.OpenTrades}"/>
+                </StackPanel>
+            </Border>
+            <Border Style="{StaticResource Card}" Margin="0,0,8,0">
+                <StackPanel>
+                    <TextBlock Style="{StaticResource Caption}" Text="TOTAL LENT (₹)"/>
+                    <TextBlock Style="{StaticResource Figure}" Text="{Binding Summary.TotalLent, StringFormat={}{0:N0}}"/>
+                </StackPanel>
+            </Border>
+            <Border Style="{StaticResource Card}" Margin="0,0,8,0">
+                <StackPanel>
+                    <TextBlock Style="{StaticResource Caption}" Text="TOTAL BORROWED (₹)"/>
+                    <TextBlock Style="{StaticResource Figure}" Text="{Binding Summary.TotalBorrowed, StringFormat={}{0:N0}}"/>
+                </StackPanel>
+            </Border>
+            <Border Style="{StaticResource Card}" Margin="0,0,8,0">
+                <StackPanel>
+                    <TextBlock Style="{StaticResource Caption}" Text="NET POSITION (₹)"/>
+                    <TextBlock Style="{StaticResource Figure}" Text="{Binding Summary.NetPosition, StringFormat={}{0:N0}}"/>
+                </StackPanel>
+            </Border>
+            <Border Style="{StaticResource Card}" Margin="0,0,8,0">
+                <StackPanel>
+                    <TextBlock Style="{StaticResource Caption}" Text="WEIGHTED AVG RATE"/>
+                    <TextBlock Style="{StaticResource Figure}" Text="{Binding Summary.WeightedAverageRate, StringFormat={}{0:N4}%}"/>
+                </StackPanel>
+            </Border>
+            <Border Style="{StaticResource Card}">
+                <StackPanel>
+                    <TextBlock Style="{StaticResource Caption}" Text="INTEREST RECEIVABLE / PAYABLE (₹)"/>
+                    <TextBlock Style="{StaticResource Figure}" FontSize="15">
+                        <Run Text="{Binding Summary.InterestReceivable, StringFormat={}{0:N0}, Mode=OneWay}" Foreground="{StaticResource Good}"/>
+                        <Run Text=" / "/>
+                        <Run Text="{Binding Summary.InterestPayable, StringFormat={}{0:N0}, Mode=OneWay}" Foreground="{StaticResource Bad}"/>
+                    </TextBlock>
+                </StackPanel>
+            </Border>
+        </UniformGrid>
+
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="300"/>
+                <ColumnDefinition Width="12"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Deal ticket -->
+            <Border Style="{StaticResource Card}" Padding="16">
+                <StackPanel>
+                    <TextBlock Text="New deal" FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource Ink}"/>
+
+                    <TextBlock Style="{StaticResource FieldLabel}" Text="Counterparty"/>
+                    <TextBox Text="{Binding Counterparty, UpdateSourceTrigger=PropertyChanged}"/>
+
+                    <TextBlock Style="{StaticResource FieldLabel}" Text="Side"/>
+                    <ComboBox ItemsSource="{Binding Sides}" SelectedItem="{Binding Side}"/>
+
+                    <TextBlock Style="{StaticResource FieldLabel}" Text="Principal (₹)"/>
+                    <TextBox Text="{Binding Principal, UpdateSourceTrigger=PropertyChanged}"/>
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition/>
+                            <ColumnDefinition Width="10"/>
+                            <ColumnDefinition/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource FieldLabel}" Text="Rate (% p.a.)"/>
+                            <TextBox Text="{Binding RatePercent, UpdateSourceTrigger=PropertyChanged}"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Style="{StaticResource FieldLabel}" Text="Tenor (days)"/>
+                            <TextBox Text="{Binding TenorDays, UpdateSourceTrigger=PropertyChanged}"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <TextBlock Style="{StaticResource FieldLabel}" Text="Start date"/>
+                    <DatePicker SelectedDate="{Binding StartDate}"/>
+
+                    <Border Background="{StaticResource Canvas}" CornerRadius="4" Padding="10" Margin="0,14,0,14">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition/>
+                                <RowDefinition/>
+                                <RowDefinition/>
+                            </Grid.RowDefinitions>
+                            <TextBlock Text="Maturity" Foreground="{StaticResource Muted}"/>
+                            <TextBlock Grid.Column="1" Text="{Binding MaturityDate, StringFormat={}{0:dd MMM yyyy}}"/>
+                            <TextBlock Grid.Row="1" Text="Interest (Act/365)" Foreground="{StaticResource Muted}"/>
+                            <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding PreviewInterest, StringFormat={}{0:N2}}"/>
+                            <TextBlock Grid.Row="2" Text="Maturity amount" Foreground="{StaticResource Muted}"/>
+                            <TextBlock Grid.Row="2" Grid.Column="1" FontWeight="SemiBold"
+                                       Text="{Binding PreviewMaturityAmount, StringFormat={}{0:N2}}"/>
+                        </Grid>
+                    </Border>
+
+                    <Button Style="{StaticResource PrimaryButton}" Content="Book deal" Command="{Binding BookCommand}" Margin="0"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Blotter -->
+            <Border Grid.Column="2" Style="{StaticResource Card}" Padding="12">
+                <DockPanel>
+                    <DockPanel DockPanel.Dock="Top" Margin="0,0,0,10">
+                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                            <Button Content="Settle" Command="{Binding SettleCommand}"/>
+                            <Button Content="Mature" Command="{Binding MatureCommand}"/>
+                            <Button Content="Cancel" Command="{Binding CancelCommand}" Margin="0"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="Status" VerticalAlignment="Center" Margin="0,0,6,0" Foreground="{StaticResource Muted}"/>
+                            <ComboBox Width="110" ItemsSource="{Binding StatusFilters}" SelectedItem="{Binding StatusFilter}"/>
+                            <TextBlock Text="Counterparty" VerticalAlignment="Center" Margin="14,0,6,0" Foreground="{StaticResource Muted}"/>
+                            <TextBox Width="160" Text="{Binding CounterpartyFilter, UpdateSourceTrigger=PropertyChanged}"
+                                     ToolTip="Press Enter to filter">
+                                <TextBox.InputBindings>
+                                    <KeyBinding Key="Enter" Command="{Binding RefreshCommand}"/>
+                                </TextBox.InputBindings>
+                            </TextBox>
+                        </StackPanel>
+                    </DockPanel>
+
+                    <DataGrid ItemsSource="{Binding Trades}" SelectedItem="{Binding SelectedTrade}"
+                              AutoGenerateColumns="False" IsReadOnly="True" HeadersVisibility="Column"
+                              GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="{StaticResource Line}"
+                              BorderThickness="0" RowHeight="30" SelectionMode="Single" CanUserResizeRows="False"
+                              Background="{StaticResource Surface}" RowBackground="{StaticResource Surface}">
+                        <DataGrid.Resources>
+                            <Style x:Key="Num" TargetType="TextBlock">
+                                <Setter Property="HorizontalAlignment" Value="Right"/>
+                                <Setter Property="Margin" Value="0,0,8,0"/>
+                            </Style>
+                        </DataGrid.Resources>
+                        <DataGrid.RowStyle>
+                            <Style TargetType="DataGridRow">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Status}" Value="Cancelled">
+                                        <Setter Property="Foreground" Value="#9AA5B1"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding Status}" Value="Matured">
+                                        <Setter Property="Foreground" Value="{StaticResource Muted}"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </DataGrid.RowStyle>
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Trade ref" Binding="{Binding TradeRef}" Width="140"/>
+                            <DataGridTextColumn Header="Counterparty" Binding="{Binding Counterparty}" Width="*"/>
+                            <DataGridTextColumn Header="Side" Binding="{Binding Side}" Width="65"/>
+                            <DataGridTextColumn Header="Principal" Binding="{Binding Principal, StringFormat={}{0:N0}}" Width="120" ElementStyle="{StaticResource Num}"/>
+                            <DataGridTextColumn Header="Rate %" Binding="{Binding RatePercent, StringFormat={}{0:N2}}" Width="60" ElementStyle="{StaticResource Num}"/>
+                            <DataGridTextColumn Header="Start" Binding="{Binding StartDate, StringFormat={}{0:dd-MMM}}" Width="65"/>
+                            <DataGridTextColumn Header="Maturity" Binding="{Binding MaturityDate, StringFormat={}{0:dd-MMM}}" Width="70"/>
+                            <DataGridTextColumn Header="Days" Binding="{Binding TenorDays}" Width="45" ElementStyle="{StaticResource Num}"/>
+                            <DataGridTextColumn Header="Interest" Binding="{Binding Interest, StringFormat={}{0:N2}}" Width="100" ElementStyle="{StaticResource Num}"/>
+                            <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="80"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </DockPanel>
+            </Border>
+        </Grid>
+
+        <!-- Status bar -->
+        <Border Grid.Row="3" Margin="0,12,0,0" Padding="10,6" CornerRadius="4" Background="{StaticResource Surface}"
+                BorderBrush="{StaticResource Line}" BorderThickness="1">
+            <TextBlock Text="{Binding StatusMessage}">
+                <TextBlock.Style>
+                    <Style TargetType="TextBlock">
+                        <Setter Property="Foreground" Value="{StaticResource Muted}"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding HasError}" Value="True">
+                                <Setter Property="Foreground" Value="{StaticResource Bad}"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </TextBlock.Style>
+            </TextBlock>
+        </Border>
+    </Grid>
+</Window>

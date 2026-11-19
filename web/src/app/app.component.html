@@ -1,0 +1,120 @@
+<header class="header">
+  <div>
+    <h1>TradeDesk</h1>
+    <p>Money-market deal booking and settlement · Angular client for an ASP.NET Core Web API</p>
+  </div>
+  <button type="button" (click)="refresh()" [disabled]="busy()">⟳ Refresh</button>
+</header>
+
+@if (summary(); as s) {
+  <section class="cards" aria-label="Position summary">
+    <div class="card"><span>Open trades</span><strong>{{ s.openTrades }}</strong></div>
+    <div class="card"><span>Total lent (₹)</span><strong>{{ s.totalLent | number: '1.0-0' : 'en-IN' }}</strong></div>
+    <div class="card"><span>Total borrowed (₹)</span><strong>{{ s.totalBorrowed | number: '1.0-0' : 'en-IN' }}</strong></div>
+    <div class="card"><span>Net position (₹)</span><strong [class.neg]="s.netPosition < 0">{{ s.netPosition | number: '1.0-0' : 'en-IN' }}</strong></div>
+    <div class="card"><span>Weighted avg rate</span><strong>{{ s.weightedAverageRate | number: '1.4-4' }}%</strong></div>
+    <div class="card">
+      <span>Interest receivable / payable (₹)</span>
+      <strong class="split">
+        <em class="pos">{{ s.interestReceivable | number: '1.0-0' : 'en-IN' }}</em> /
+        <em class="neg">{{ s.interestPayable | number: '1.0-0' : 'en-IN' }}</em>
+      </strong>
+    </div>
+  </section>
+}
+
+<main class="layout">
+  <form class="panel ticket" [formGroup]="ticket" (ngSubmit)="book()" novalidate>
+    <h2>New deal</h2>
+
+    <label>Counterparty
+      <input formControlName="counterparty" placeholder="e.g. Alpha Bank" [class.bad]="invalid('counterparty')" />
+    </label>
+
+    <label>Side
+      <select formControlName="side">
+        <option value="Lend">Lend</option>
+        <option value="Borrow">Borrow</option>
+      </select>
+    </label>
+
+    <label>Principal (₹)
+      <input type="number" formControlName="principal" min="1" [class.bad]="invalid('principal')" />
+    </label>
+
+    <div class="row">
+      <label>Rate (% p.a.)
+        <input type="number" formControlName="ratePercent" step="0.01" [class.bad]="invalid('ratePercent')" />
+      </label>
+      <label>Tenor (days)
+        <input type="number" formControlName="tenorDays" min="1" max="365" [class.bad]="invalid('tenorDays')" />
+      </label>
+    </div>
+
+    <label>Start date
+      <input type="date" formControlName="startDate" />
+    </label>
+
+    <dl class="preview">
+      <dt>Maturity</dt><dd>{{ preview().maturityDate | date: 'dd MMM yyyy' }}</dd>
+      <dt>Interest (Act/365)</dt><dd>{{ preview().interest | number: '1.2-2' : 'en-IN' }}</dd>
+      <dt>Maturity amount</dt><dd><b>{{ preview().maturityAmount | number: '1.2-2' : 'en-IN' }}</b></dd>
+    </dl>
+
+    <button class="primary" type="submit" [disabled]="busy()">Book deal</button>
+  </form>
+
+  <section class="panel blotter">
+    <div class="toolbar">
+      <label class="inline">Status
+        <select [value]="statusFilter()" (change)="setStatusFilter($any($event.target).value)">
+          <option value="">All</option>
+          @for (s of statuses; track s) {
+            <option [value]="s">{{ s }}</option>
+          }
+        </select>
+      </label>
+      <label class="inline">Counterparty
+        <input [value]="counterpartyFilter()" (input)="counterpartyFilter.set($any($event.target).value)"
+               (keyup.enter)="refresh()" placeholder="Enter to filter" />
+      </label>
+      <span class="spacer"></span>
+      <button type="button" (click)="act('settle')" [disabled]="!canAct('settle')">Settle</button>
+      <button type="button" (click)="act('mature')" [disabled]="!canAct('mature')">Mature</button>
+      <button type="button" (click)="act('cancel')" [disabled]="!canAct('cancel')">Cancel</button>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Trade ref</th><th>Counterparty</th><th>Side</th><th class="num">Principal</th><th class="num">Rate %</th>
+            <th>Start</th><th>Maturity</th><th class="num">Days</th><th class="num">Interest</th><th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (t of trades(); track t.id) {
+            <tr (click)="selectedId.set(t.id)" [class.selected]="t.id === selectedId()" [class]="'st-' + t.status.toLowerCase()">
+              <td class="mono">{{ t.tradeRef }}</td>
+              <td>{{ t.counterparty }}</td>
+              <td><span class="side" [class.borrow]="t.side === 'Borrow'">{{ t.side }}</span></td>
+              <td class="num">{{ t.principal | number: '1.0-0' : 'en-IN' }}</td>
+              <td class="num">{{ t.ratePercent | number: '1.2-2' }}</td>
+              <td>{{ t.startDate | date: 'dd-MMM' }}</td>
+              <td>{{ t.maturityDate | date: 'dd-MMM' }}</td>
+              <td class="num">{{ t.tenorDays }}</td>
+              <td class="num">{{ t.interest | number: '1.2-2' : 'en-IN' }}</td>
+              <td><span class="status">{{ t.status }}</span></td>
+            </tr>
+          } @empty {
+            <tr><td colspan="10" class="empty">No trades match the filter.</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+@if (message(); as m) {
+  <footer class="statusbar" [class.error]="m.error" role="status">{{ m.text }}</footer>
+}

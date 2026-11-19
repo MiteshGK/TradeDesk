@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  dotnet:
+    name: .NET build and tests
+    runs-on: windows-latest   # the WPF project needs Windows
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+      - run: dotnet restore TradeDesk.sln
+      - run: dotnet build TradeDesk.sln --no-restore -c Release
+      - run: dotnet test TradeDesk.sln --no-build -c Release --logger "console;verbosity=normal"
+
+  web:
+    name: Angular build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci
+      - run: npx ng build
